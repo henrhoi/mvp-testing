@@ -1,28 +1,32 @@
 import { Autocomplete, Stack, TextField, Typography } from '@mui/material';
-import { unstable_debounce } from '@mui/utils';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import './App.css';
+import { useDebounce } from './debounce';
 import { useSearchActivites } from './hooks/useSearchActivities';
 
 function App() {
-  const [search, setSearch] = useState('');
-  const options = useSearchActivites(search);
+  const [inputValue, setInputValue] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const options = useSearchActivites(searchTerm);
 
-  const debouncedSetSearch = unstable_debounce((s: string) => {
-    console.log("Set search", s);
-    setSearch(s);
-  }, 500)
+
+  const debouncedSetSearchTerm = useDebounce(useCallback((s: string) => {
+    setSearchTerm(s);
+  }, []), 500);
+
   return (
     <>
       <Typography variant="h3">Activity search MVP</ Typography>
       <Stack p={2}>
-        <Autocomplete
-          options={options}
-          onInputChange={(_, newInputValue) => {
-            debouncedSetSearch(newInputValue);
+        <Autocomplete<string>
+          getOptionLabel={(option) => option}
+          inputValue={inputValue}
+          onInputChange={(event, newInputValue) => {
+            setInputValue(newInputValue);
+            debouncedSetSearchTerm(newInputValue);
           }}
+          options={options}
           filterOptions={(x) => x}
-          getOptionLabel={(option) => option.label + " - " + option.category}
           renderInput={(params) => <TextField {...params} label="Activities" />}
         />
       </Stack>
